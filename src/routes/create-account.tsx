@@ -47,7 +47,6 @@ export default function CreateAccount() {
     try {
       setLoading(true);
       const credentials = await createUserWithEmailAndPassword(auth, email, password);
-      console.log(credentials.user);
       await updateProfile(credentials.user, {
         displayName: name,
       });
@@ -58,7 +57,6 @@ export default function CreateAccount() {
       if (error instanceof FirebaseError) {
         setError(error.message);
       }
-      console.log(error);
     } finally {
       setLoading(false);
     }
