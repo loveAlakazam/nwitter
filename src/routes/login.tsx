@@ -4,6 +4,7 @@ import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { Form, Input, Error, Title, Wrapper, Switcher } from "./auth-components";
+import GithubButton from "../components/github-button";
 
 const errors = {
   "auth/email-already-in-use": "That email already exists",
@@ -77,6 +78,7 @@ export default function CreateAccount() {
       <Switcher>
         Don't have an account? <Link to="/create-account">Create one &rarr;</Link>
       </Switcher>
+      <GithubButton />
     </Wrapper>
   );
 }
