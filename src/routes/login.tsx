@@ -5,6 +5,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { Form, Input, Error, Title, Wrapper, Switcher } from "./auth-components";
 import GithubButton from "../components/github-button";
+import GoogleButton from "../components/google-button";
 
 const errors = {
   "auth/email-already-in-use": "That email already exists",
@@ -75,10 +76,13 @@ export default function CreateAccount() {
         <Input onChange={onChange} type="submit" value={isLoading ? "Loading..." : "Log in"} />
       </Form>
       {error !== "" ? <Error>{error}</Error> : null}
+
+      <GithubButton />
+      <GoogleButton />
       <Switcher>
         Don't have an account? <Link to="/create-account">Create one &rarr;</Link>
       </Switcher>
-      <GithubButton />
+      {/* Reset Password */}
     </Wrapper>
   );
 }
