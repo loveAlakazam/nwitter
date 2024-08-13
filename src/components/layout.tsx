@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { styled } from 'styled-components';
 import { auth } from '../firebase';
 const Wrapper = styled.div`
@@ -96,6 +96,7 @@ export default function LayOut() {
           </svg>
         </MenuItem>
       </Menu>
+      <Outlet />
     </Wrapper>
   );
 }

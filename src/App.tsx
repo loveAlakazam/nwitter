@@ -9,7 +9,8 @@ import reset from 'styled-reset';
 import { useEffect, useState } from 'react';
 import LoadingScreen from './components/loading-screen';
 import { auth } from './firebase';
-import ProtectedRoute from './routes/protected-route';
+import ProtectedRoute from './components/protected-route';
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -62,9 +63,7 @@ function App() {
   const [isLoading, setLoading] = useState(true);
 
   const init = async () => {
-    // wait for firebase
     await auth.authStateReady();
-    // setTimeout(() => setLoading(false), 2000);
     setLoading(false);
   };
 

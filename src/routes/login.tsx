@@ -10,7 +10,7 @@ import {
   Switcher,
   Title,
   Wrapper,
-} from './auth-components';
+} from '../components/auth-components';
 import GithubButton from '../components/github-button';
 import GoogleButton from '../components/google-button';
 
