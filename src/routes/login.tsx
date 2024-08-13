@@ -1,22 +1,29 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FirebaseError } from "firebase/app";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
-import { Form, Input, Error, Title, Wrapper, Switcher } from "./auth-components";
-import GithubButton from "../components/github-button";
-import GoogleButton from "../components/google-button";
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FirebaseError } from 'firebase/app';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
+import {
+  Error,
+  Form,
+  Input,
+  Switcher,
+  Title,
+  Wrapper,
+} from './auth-components';
+import GithubButton from '../components/github-button';
+import GoogleButton from '../components/google-button';
 
-const errors = {
-  "auth/email-already-in-use": "That email already exists",
-};
+// const errors = {
+//   "auth/email-already-in-use": "That email already exists",
+// };
 
 export default function CreateAccount() {
   const navigate = useNavigate();
   const [isLoading, setLoading] = useState(false); // 화면 로딩 X
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
   // 값이 변경될때 발생하는 이벤트
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,9 +31,9 @@ export default function CreateAccount() {
       target: { name, value },
     } = e;
 
-    if (name === "password") {
+    if (name === 'password') {
       setPassword(value);
-    } else if (name === "email") {
+    } else if (name === 'email') {
       setEmail(value);
     }
   };
@@ -34,14 +41,14 @@ export default function CreateAccount() {
   // 버튼클릭 이벤트 발생할때
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
-    if (isLoading || email === "" || password === "") return;
+    setError('');
+    if (isLoading || email === '' || password === '') return;
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
 
       // go to index
-      navigate("/");
+      navigate('/');
     } catch (e) {
       // set error
       if (e instanceof FirebaseError) {
@@ -73,14 +80,19 @@ export default function CreateAccount() {
           type="password"
           required
         />
-        <Input onChange={onChange} type="submit" value={isLoading ? "Loading..." : "Log in"} />
+        <Input
+          onChange={onChange}
+          type="submit"
+          value={isLoading ? 'Loading...' : 'Log in'}
+        />
       </Form>
-      {error !== "" ? <Error>{error}</Error> : null}
+      {error !== '' ? <Error>{error}</Error> : null}
 
       <GithubButton />
       <GoogleButton />
       <Switcher>
-        Don't have an account? <Link to="/create-account">Create one &rarr;</Link>
+        Don't have an account?{' '}
+        <Link to="/create-account">Create one &rarr;</Link>
       </Switcher>
       {/* Reset Password */}
     </Wrapper>

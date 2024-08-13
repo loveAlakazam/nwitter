@@ -7,7 +7,7 @@ const Wrapper = styled.div`
   grid-template-columns: 1fr 4fr;
   padding: 50px 0px;
   width: 100%;
-  height: 100px;
+  height: 100%;
   max-width: 860px;
 `;
 const Menu = styled.div`
@@ -51,7 +51,6 @@ export default function LayOut() {
     <Wrapper>
       <Menu>
         <Link to="/">
-          {/* Home */}
           <MenuItem>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -65,7 +64,6 @@ export default function LayOut() {
           </MenuItem>
         </Link>
 
-        {/* Profile */}
         <Link to="/profile">
           <MenuItem>
             <svg
@@ -83,7 +81,6 @@ export default function LayOut() {
           </MenuItem>
         </Link>
 
-        {/* Logout */}
         <MenuItem onClick={onLogOut} className="log-out">
           <svg
             xmlns="http://www.w3.org/2000/svg"
