@@ -1,7 +1,8 @@
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, updateDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import { styled } from 'styled-components';
-import { auth, db } from '../firebase';
+import { auth, db, storage } from '../firebase';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 const Form = styled.form`
   display: flex;
@@ -76,16 +77,39 @@ export default function PostTweetForm() {
     const user = auth.currentUser;
     if (!user || isLoading || tweet === '' || tweet.length > 180) return;
     try {
+      // login allowed
       setLoading(true);
-      await addDoc(collection(db, 'tweets'), {
+
+      // tweet (text message)
+      const docs = await addDoc(collection(db, 'tweets'), {
         tweet,
         createdAt: Date.now(),
         userName: user.displayName || 'Anonymous',
         userId: user.uid, // owner of tweet
       });
+
+      // upload files
+      if (file) {
+        const locationRef = ref(
+          storage,
+          `tweets/${user.uid}-${user.displayName}/${docs.id}`
+        );
+        const result = await uploadBytes(locationRef, file);
+
+        // get public URL from result(image file)
+        const url = await getDownloadURL(result.ref);
+
+        // firestore 다큐먼트에 사진 url을 첨부
+        await updateDoc(docs, {
+          photo: url,
+        });
+      }
+      setTweet('');
+      setFile(null);
     } catch (e) {
       console.error(e);
     } finally {
+      // login not allowed
       setLoading(false);
     }
   };
