@@ -1,19 +1,20 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import LayOut from './components/layout';
-import Home from './routes/home';
-import Profile from './routes/profile';
-import CreateAccount from './routes/create-account';
-import Login from './routes/login';
-import { styled, createGlobalStyle } from 'styled-components';
-import reset from 'styled-reset';
-import { useEffect, useState } from 'react';
-import LoadingScreen from './components/loading-screen';
-import { auth } from './firebase';
-import ProtectedRoute from './components/protected-route';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import LayOut from "./components/layout";
+import Home from "./routes/home";
+import Profile from "./routes/profile";
+import CreateAccount from "./routes/create-account";
+import Login from "./routes/login";
+import { styled, createGlobalStyle } from "styled-components";
+import reset from "styled-reset";
+import { useEffect, useState } from "react";
+import LoadingScreen from "./components/loading-screen";
+import { auth } from "./firebase";
+import ProtectedRoute from "./components/protected-route";
+import ResetPasswords from "./routes/reset-password";
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: (
       <ProtectedRoute>
         <LayOut />
@@ -21,22 +22,26 @@ const router = createBrowserRouter([
     ),
     children: [
       {
-        path: '',
+        path: "",
         element: <Home />,
       },
       {
-        path: 'profile',
+        path: "profile",
         element: <Profile />,
       },
     ],
   },
   {
-    path: '/login',
+    path: "/login",
     element: <Login />,
   },
   {
-    path: '/create-account',
+    path: "/create-account",
     element: <CreateAccount />,
+  },
+  {
+    path: "/reset-passwords",
+    element: <ResetPasswords />,
   },
 ]);
 
