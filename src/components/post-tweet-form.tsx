@@ -1,8 +1,15 @@
-import { addDoc, collection, updateDoc } from 'firebase/firestore';
-import { useState } from 'react';
-import { styled } from 'styled-components';
-import { auth, db, storage } from '../firebase';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { addDoc, collection, updateDoc } from "firebase/firestore";
+import { useState } from "react";
+import { styled } from "styled-components";
+import { auth, db, storage } from "../firebase";
+import {
+  getDownloadURL,
+  ref,
+  StorageError,
+  StorageErrorCode,
+  uploadBytes,
+  uploadBytesResumable,
+} from "firebase/storage";
 
 const Form = styled.form`
   display: flex;
@@ -18,8 +25,8 @@ const TextArea = styled.textarea`
   background-color: black;
   width: 100%;
   resize: none;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue';
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, "Open Sans", "Helvetica Neue";
   &::placeholder {
     font-size: 16px;
   }
@@ -58,7 +65,7 @@ const SubmitBtn = styled.input`
 export default function PostTweetForm() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setLoading] = useState(false);
-  const [tweet, setTweet] = useState('');
+  const [tweet, setTweet] = useState("");
   const [file, setFile] = useState<File | null>(null);
 
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -75,25 +82,30 @@ export default function PostTweetForm() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const user = auth.currentUser;
-    if (!user || isLoading || tweet === '' || tweet.length > 180) return;
+    if (!user || isLoading || tweet === "" || tweet.length > 180) return;
     try {
       // login allowed
       setLoading(true);
 
       // tweet (text message)
-      const docs = await addDoc(collection(db, 'tweets'), {
+      const docs = await addDoc(collection(db, "tweets"), {
         tweet,
         createdAt: Date.now(),
-        userName: user.displayName || 'Anonymous',
+        userName: user.displayName || "Anonymous",
         userId: user.uid, // owner of tweet
       });
 
       // upload files
       if (file) {
-        const locationRef = ref(
-          storage,
-          `tweets/${user.uid}-${user.displayName}/${docs.id}`
-        );
+        const locationRef = ref(storage, `tweets/${user.uid}/${docs.id}`);
+
+        // 파일사이즈가 1MB 이상이면 업로드를 하지 않도록한다.
+        const uploadTask = uploadBytesResumable(locationRef, file);
+        if (file.size >= 1024 * 1024) {
+          // 업로드취소
+          uploadTask.cancel();
+          throw new StorageError(StorageErrorCode.CANCELED, "file size is over 1MB");
+        }
         const result = await uploadBytes(locationRef, file);
 
         // get public URL from result(image file)
@@ -104,7 +116,7 @@ export default function PostTweetForm() {
           photo: url,
         });
       }
-      setTweet('');
+      setTweet("");
       setFile(null);
     } catch (e) {
       console.error(e);
@@ -123,19 +135,9 @@ export default function PostTweetForm() {
         value={tweet}
         placeholder="What is happening?"
       />
-      <AttachFileButton htmlFor="file">
-        {file ? 'Photo added ✅' : 'Add photo'}
-      </AttachFileButton>
-      <AttachFileInput
-        onChange={onFileChange}
-        type="file"
-        id="file"
-        accept="image/*"
-      />
-      <SubmitBtn
-        type="submit"
-        value={isLoading ? 'Posting...' : 'Post Tweet'}
-      />
+      <AttachFileButton htmlFor="file">{file ? "Photo added ✅" : "Add photo"}</AttachFileButton>
+      <AttachFileInput onChange={onFileChange} type="file" id="file" accept="image/*" />
+      <SubmitBtn type="submit" value={isLoading ? "Posting..." : "Post Tweet"} />
     </Form>
   );
 }
