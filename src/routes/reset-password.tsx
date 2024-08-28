@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Form, Input, Title, Wrapper, Error, Switcher } from "../components/auth-components";
 import { FirebaseError } from "firebase/app";
 import { auth } from "../firebase";
