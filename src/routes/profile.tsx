@@ -49,7 +49,7 @@ const Tweets = styled.div`
   gap: 10px;
 `;
 
-const EditMyNameButton = styled.label`
+const EditNameButton = styled.label`
   color: white;
   width: 20px;
   height: 20px;
@@ -59,18 +59,31 @@ const EditMyNameButton = styled.label`
   }
 `;
 
-const EditMyNameInput = styled.input`
-  display: none;
+const EditNameInput = styled.input`
+  /* display: none; */
 `;
 
 export default function Profile() {
   const user = auth.currentUser;
+  const [isNameEditing, setIsNameEditing] = useState(false);
+  const [name, setName] = useState(user?.displayName);
   const [avatar, setAvatar] = useState(user?.photoURL);
   const [tweets, setTweets] = useState<ITweet[]>([]);
-  const [editMyName, setEditMyName] = useState(user?.displayName);
 
-  const onMyNameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEditMyName(e.target.value);
+  const activeEnter = async () => {
+    console.log(name);
+  };
+  const onEnterKeyDown = (e: React.KeyboardEvent) => {
+    // 엔터키 누르면 이름 변경
+    if (e.key === 'Enter') {
+      activeEnter();
+    }
+    // 엔터입력 이후 이름변경인풋은 변경된이름 으로 처리..
+    setIsNameEditing(false);
+    setName(name);
+  };
+  const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
   };
   const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { files } = e.target;
@@ -139,7 +152,7 @@ export default function Profile() {
         accept="image/*"
       />
       <Name>{user?.displayName ?? 'Anonymous'}</Name>
-      <EditMyNameButton htmlFor="myName">
+      <EditNameButton>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -148,11 +161,12 @@ export default function Profile() {
         >
           <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
         </svg>
-      </EditMyNameButton>
-      <EditMyNameInput
+      </EditNameButton>
+      <EditNameInput
         placeholder={user?.displayName ?? 'Anonymous'}
-        onChange={onMyNameChange}
-        id="myName"
+        onChange={onNameChange}
+        onKeyDown={onEnterKeyDown}
+        id="name"
       />
       <Tweets>
         {tweets.map((tweet) => (

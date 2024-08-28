@@ -128,6 +128,7 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
       // tbd: 사진도 같이 업데이트하기.
       // 사진이 있든 없든 사진도 변경할 수 있도록 하기.
       // 사진 존재하면 업데이트된 사진으로 변경하기.
+      
     } catch (e) {
       console.error(e);
     } finally {
