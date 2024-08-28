@@ -1,9 +1,9 @@
-import { styled } from "styled-components";
-import { ITweet } from "./timeline";
-import { auth, db, storage } from "../firebase";
-import { deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
-import { useState } from "react";
+import { styled } from 'styled-components';
+import { ITweet } from './timeline';
+import { auth, db, storage } from '../firebase';
+import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { deleteObject, ref } from 'firebase/storage';
+import { useState } from 'react';
 
 const Wrapper = styled.div`
   display: grid;
@@ -121,9 +121,9 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
   };
   const onUpdate = async () => {
     try {
-      console.log("updated!");
+      console.log('updated!');
       // tweet 업데이트
-      await updateDoc(doc(db, "tweets", id), { tweet: editedTweet });
+      await updateDoc(doc(db, 'tweets', id), { tweet: editedTweet });
 
       // tbd: 사진도 같이 업데이트하기.
       // 사진이 있든 없든 사진도 변경할 수 있도록 하기.
@@ -135,13 +135,13 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
     }
   };
   const onDelete = async () => {
-    const ok = confirm("Are you sure you want to delete this tweet?");
+    const ok = confirm('Are you sure you want to delete this tweet?');
 
     // 승낙을 안하거나 || 트위터작성자가 아니면 삭제 취소.
     if (!ok || user?.uid !== userId) return;
     try {
       // tweet 삭제
-      await deleteDoc(doc(db, "tweets", id));
+      await deleteDoc(doc(db, 'tweets', id));
 
       // tweet삭제할때 같이 첨부한 이미지도 삭제
       if (photo) {
@@ -150,7 +150,6 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
       }
     } catch (e) {
       console.error(e);
-    } finally {
     }
   };
   return (
@@ -169,25 +168,23 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
           <Payload>{tweet}</Payload>
         )}
 
-        {
-          // 작성자본인인지?
-          // isEditing이 활성화되어있는지? ->
-          user?.uid === userId ? (
-            <>
-              {isEditing ? (
-                <>
-                  <CancelButton onClick={handleCancel}>Cancel</CancelButton>
-                  <UpdateButton onClick={onUpdate}>Update</UpdateButton>
-                </>
-              ) : (
-                <EditButton onClick={handleEdit}>Edit</EditButton>
-              )}
-            </>
-          ) : null
-        }
+        {user?.uid === userId ? (
+          <>
+            {isEditing ? (
+              <>
+                <CancelButton onClick={handleCancel}>Cancel</CancelButton>
+                <UpdateButton onClick={onUpdate}>Update</UpdateButton>
+              </>
+            ) : (
+              <EditButton onClick={handleEdit}>Edit</EditButton>
+            )}
+          </>
+        ) : null}
         {
           // 삭제 버튼
-          user?.uid === userId ? <DeleteButton onClick={onDelete}>Delete</DeleteButton> : null
+          user?.uid === userId ? (
+            <DeleteButton onClick={onDelete}>Delete</DeleteButton>
+          ) : null
         }
       </Column>
       <Column>{photo ? <Photo src={photo} /> : null}</Column>
