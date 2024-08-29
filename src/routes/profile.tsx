@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { auth, db, storage } from "../firebase";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { updateProfile } from "firebase/auth";
 import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
@@ -68,7 +68,14 @@ const EditNameButtonInput = styled.button`
 `;
 
 const EditNameInput = styled.input`
-  /* display: none; */
+  background-color: transparent;
+  color: #1d9bf0;
+  font-size: 22px;
+  border: none;
+  caret-color: #1d9bf0;
+  &:focus {
+    outline: none;
+  }
 `;
 
 export default function Profile() {
@@ -77,6 +84,8 @@ export default function Profile() {
   const [name, setName] = useState(user?.displayName);
   const [avatar, setAvatar] = useState(user?.photoURL);
   const [tweets, setTweets] = useState<ITweet[]>([]);
+
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const activeEsc = () => {
     // console.log("press esc....");
@@ -101,10 +110,11 @@ export default function Profile() {
   };
 
   const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 키보드에 입력하면 입력한대로 저장..
     setName(e.target.value);
   };
 
-  const onEditNameButton = () => {
+  const onClickEditNameButton = () => {
     setIsNameEditing(true);
   };
 
@@ -144,9 +154,14 @@ export default function Profile() {
     });
     setTweets(tweets);
   };
+
   useEffect(() => {
     fetchTweets();
   }, []);
+  useLayoutEffect(() => {
+    // 입력창 커서 포커스
+    if (inputRef.current !== null) inputRef.current.focus();
+  });
 
   return (
     <Wrapper>
@@ -174,9 +189,10 @@ export default function Profile() {
           {isNameEditing ? (
             <Name>
               <EditNameInput
-                placeholder={user?.displayName ?? "Anonymous"}
+                placeholder={`${user?.displayName ?? ""} (취소: esc)`}
                 onChange={onNameChange}
                 onKeyDown={onEnterKeyDown}
+                ref={inputRef}
                 id="name"
               />
             </Name>
@@ -195,7 +211,7 @@ export default function Profile() {
               >
                 <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
               </svg>
-              <EditNameButtonInput id="edit-button" onClick={onEditNameButton} />
+              <EditNameButtonInput id="edit-button" onClick={onClickEditNameButton} />
             </EditName>
           )}
         </NameColumn>
