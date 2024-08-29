@@ -1,18 +1,11 @@
-import styled from 'styled-components';
-import { auth, db, storage } from '../firebase';
-import { useEffect, useState } from 'react';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { updateProfile } from 'firebase/auth';
-import {
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  where,
-} from 'firebase/firestore';
-import { ITweet } from '../components/timeline';
-import Tweet from '../components/tweet';
+import styled from "styled-components";
+import { auth, db, storage } from "../firebase";
+import { useEffect, useState } from "react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { updateProfile } from "firebase/auth";
+import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
+import { ITweet } from "../components/timeline";
+import Tweet from "../components/tweet";
 
 const Wrapper = styled.div`
   display: flex;
@@ -49,7 +42,19 @@ const Tweets = styled.div`
   gap: 10px;
 `;
 
-const EditNameButton = styled.label`
+const NameWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+`;
+const NameColumn = styled.div`
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const EditName = styled.label`
   color: white;
   width: 20px;
   height: 20px;
@@ -57,6 +62,9 @@ const EditNameButton = styled.label`
   &:hover {
     color: #1d9bf0;
   }
+`;
+const EditNameButtonInput = styled.button`
+  display: none;
 `;
 
 const EditNameInput = styled.input`
@@ -70,21 +78,36 @@ export default function Profile() {
   const [avatar, setAvatar] = useState(user?.photoURL);
   const [tweets, setTweets] = useState<ITweet[]>([]);
 
-  const activeEnter = async () => {
-    console.log(name);
-  };
-  const onEnterKeyDown = (e: React.KeyboardEvent) => {
-    // 엔터키 누르면 이름 변경
-    if (e.key === 'Enter') {
-      activeEnter();
-    }
-    // 엔터입력 이후 이름변경인풋은 변경된이름 으로 처리..
+  const activeEsc = () => {
+    // console.log("press esc....");
+    setName(user?.displayName); // 원래이름으로 초기화...
     setIsNameEditing(false);
-    setName(name);
   };
+
+  const activeEnter = async () => {
+    // console.log(name);
+    setName(name); // 입력한 이름으로 변경
+    setIsNameEditing(false);
+  };
+
+  const onEnterKeyDown = async (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      // enter 키를 누르면 이름 변경
+      await activeEnter();
+    } else if (e.key === "Escape") {
+      // esc 키를 누르면 이름변경 취소
+      activeEsc();
+    }
+  };
+
   const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
   };
+
+  const onEditNameButton = () => {
+    setIsNameEditing(true);
+  };
+
   const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { files } = e.target;
     if (!user) return;
@@ -102,9 +125,9 @@ export default function Profile() {
   };
   const fetchTweets = async () => {
     const tweetQuery = query(
-      collection(db, 'tweets'),
-      where('userId', '==', user?.uid),
-      orderBy('createdAt', 'desc'),
+      collection(db, "tweets"),
+      where("userId", "==", user?.uid),
+      orderBy("createdAt", "desc"),
       limit(25)
     );
     const snapshot = await getDocs(tweetQuery);
@@ -145,29 +168,39 @@ export default function Profile() {
           </svg>
         )}
       </AvatarUpload>
-      <AvatarInput
-        onChange={onAvatarChange}
-        id="avatar"
-        type="file"
-        accept="image/*"
-      />
-      <Name>{user?.displayName ?? 'Anonymous'}</Name>
-      <EditNameButton>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="size-6"
-        >
-          <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
-        </svg>
-      </EditNameButton>
-      <EditNameInput
-        placeholder={user?.displayName ?? 'Anonymous'}
-        onChange={onNameChange}
-        onKeyDown={onEnterKeyDown}
-        id="name"
-      />
+      <AvatarInput onChange={onAvatarChange} id="avatar" type="file" accept="image/*" />
+      <NameWrapper>
+        <NameColumn>
+          {isNameEditing ? (
+            <Name>
+              <EditNameInput
+                placeholder={user?.displayName ?? "Anonymous"}
+                onChange={onNameChange}
+                onKeyDown={onEnterKeyDown}
+                id="name"
+              />
+            </Name>
+          ) : (
+            <Name>{user?.displayName ?? "Anonymous"}</Name>
+          )}
+        </NameColumn>
+        <NameColumn>
+          {isNameEditing ? null : (
+            <EditName htmlFor="edit-button">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="size-6"
+              >
+                <path d="M21.731 2.269a2.625 2.625 0 0 0-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 0 0 0-3.712ZM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 0 0-1.32 2.214l-.8 2.685a.75.75 0 0 0 .933.933l2.685-.8a5.25 5.25 0 0 0 2.214-1.32L19.513 8.2Z" />
+              </svg>
+              <EditNameButtonInput id="edit-button" onClick={onEditNameButton} />
+            </EditName>
+          )}
+        </NameColumn>
+      </NameWrapper>
+
       <Tweets>
         {tweets.map((tweet) => (
           <Tweet key={tweet.id} {...tweet} />
