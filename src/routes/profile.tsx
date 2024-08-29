@@ -69,6 +69,7 @@ const EditNameButtonInput = styled.button`
 
 const EditNameInput = styled.input`
   background-color: transparent;
+  text-align: center;
   color: #1d9bf0;
   font-size: 22px;
   border: none;
