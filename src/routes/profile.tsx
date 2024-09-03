@@ -95,7 +95,7 @@ export default function Profile() {
   };
 
   const activeEnter = async () => {
-    // console.log(name);
+    console.log(name);
     setName(name); // 입력한 이름으로 변경
     setIsNameEditing(false);
   };
