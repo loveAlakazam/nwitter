@@ -1,9 +1,9 @@
-import { styled } from "styled-components";
-import { ITweet } from "./timeline";
-import { auth, db, storage } from "../firebase";
-import { deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { deleteObject, ref } from "firebase/storage";
-import { useState } from "react";
+import { styled } from 'styled-components';
+import { ITweet } from './timeline';
+import { auth, db, storage } from '../firebase';
+import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { deleteObject, ref } from 'firebase/storage';
+import { useState } from 'react';
 
 const Wrapper = styled.div`
   display: grid;
@@ -122,14 +122,14 @@ const SetImageButton = styled.label`
   }
 `;
 
-const SetImageButtonInput = styled.button`
+const SetImageButtonInput = styled.input`
   display: none;
 `;
 
 export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTweet, setEditedTweet] = useState(tweet);
-  const [isEditPhoto, setIsEditPhoto] = useState(false);
+  const [editedPhoto, setEditedPhoto] = useState<File | null>(null);
 
   const user = auth.currentUser;
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -145,13 +145,24 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
   };
   const onUpdate = async () => {
     try {
-      console.log("updated!");
+      if (user?.uid !== userId) return;
+      console.log('updated!');
       // tweet 업데이트
-      await updateDoc(doc(db, "tweets", id), { tweet: editedTweet });
+      await updateDoc(doc(db, 'tweets', id), { tweet: editedTweet });
 
       // tbd: 사진도 같이 업데이트하기.
       // 사진이 있든 없든 사진도 변경할 수 있도록 하기.
       // 사진 존재하면 업데이트된 사진으로 변경하기.
+      if (editedPhoto) {
+        if (photo) {
+          // 이전 사진 제거
+          const photoRef = ref(storage, `tweets/${user.uid}/${id}`);
+          await deleteObject(photoRef);
+        }
+
+        const photoRef = ref(storage, `tweets/${userId}/${id}`);
+        await updateObject
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -159,13 +170,13 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
     }
   };
   const onDelete = async () => {
-    const ok = confirm("Are you sure you want to delete this tweet?");
+    const ok = confirm('Are you sure you want to delete this tweet?');
 
     // 승낙을 안하거나 || 트위터작성자가 아니면 삭제 취소.
     if (!ok || user?.uid !== userId) return;
     try {
       // tweet 삭제
-      await deleteDoc(doc(db, "tweets", id));
+      await deleteDoc(doc(db, 'tweets', id));
 
       // tweet삭제할때 같이 첨부한 이미지도 삭제
       if (photo) {
@@ -176,7 +187,14 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
       console.error(e);
     }
   };
-  const onClickSetImageButton = async (e: React.ChangeEvent<HTMLInputElement>) => {};
+  const onClickSetImageButton = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { files } = e.target;
+    if (files && files.length === 1) {
+      setEditedPhoto(files[0]);
+    }
+  };
 
   return (
     <Wrapper>
@@ -214,7 +232,12 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <SetImageButtonInput id="edit-photo" onClick={onClickSetImageButton} />
+                    <SetImageButtonInput
+                      id="edit-photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={onClickSetImageButton}
+                    />
                   </SetImageButton>
                 </>
               ) : (
@@ -224,11 +247,13 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
           ) : null}
           {
             // 삭제 버튼
-            user?.uid === userId ? <DeleteButton onClick={onDelete}>Delete</DeleteButton> : null
+            user?.uid === userId ? (
+              <DeleteButton onClick={onDelete}>Delete</DeleteButton>
+            ) : null
           }
         </EditorColumns>
       </Column>
-      <Column>{isEditPhoto ? <></> : photo ? <Photo src={photo} /> : null}</Column>
+      <Column>{photo ? <Photo src={photo} /> : null}</Column>
     </Wrapper>
   );
 }
