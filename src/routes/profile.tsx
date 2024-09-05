@@ -96,7 +96,15 @@ export default function Profile() {
 
   const activeEnter = async () => {
     console.log(name);
-    setName(name); // 입력한 이름으로 변경
+    setName(name);
+
+    // 로그인된 유저라면, 입력한 이름으로 변경
+    if (user) {
+      // 화이트스페이스를 제외한 입력한 이름길이가 0자이거나, null, undefined면 원래이름으로 변경
+      await updateProfile(user, {
+        displayName: name?.trim() ? name : user.displayName,
+      });
+    }
     setIsNameEditing(false);
   };
 
@@ -110,8 +118,8 @@ export default function Profile() {
     }
   };
 
-  const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // 키보드에 입력하면 입력한대로 저장..
+  const onNameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 키보드 입력에 따라 name이 바뀜.
     setName(e.target.value);
   };
 
@@ -198,7 +206,7 @@ export default function Profile() {
               />
             </Name>
           ) : (
-            <Name>{user?.displayName ?? "Anonymous"}</Name>
+            <Name>{user?.displayName}</Name>
           )}
         </NameColumn>
         <NameColumn>
