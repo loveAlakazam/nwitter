@@ -1,9 +1,17 @@
-import { styled } from 'styled-components';
-import { ITweet } from './timeline';
-import { auth, db, storage } from '../firebase';
-import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { deleteObject, ref } from 'firebase/storage';
-import { useState } from 'react';
+import { styled } from "styled-components";
+import { ITweet } from "./timeline";
+import { auth, db, storage } from "../firebase";
+import { deleteDoc, doc, updateDoc } from "firebase/firestore";
+import {
+  deleteObject,
+  getDownloadURL,
+  ref,
+  StorageError,
+  StorageErrorCode,
+  uploadBytes,
+  uploadBytesResumable,
+} from "firebase/storage";
+import { useState } from "react";
 
 const Wrapper = styled.div`
   display: grid;
@@ -126,6 +134,11 @@ const SetImageButtonInput = styled.input`
   display: none;
 `;
 
+export interface IEditedTweetData {
+  tweet: string; // 업데이트된 트윗내용
+  photo?: string; // 업데이트된 사진 URL
+}
+
 export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedTweet, setEditedTweet] = useState(tweet);
@@ -146,22 +159,26 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
   const onUpdate = async () => {
     try {
       if (user?.uid !== userId) return;
-      console.log('updated!');
-      // tweet 업데이트
-      await updateDoc(doc(db, 'tweets', id), { tweet: editedTweet });
-
-      // tbd: 사진도 같이 업데이트하기.
-      // 사진이 있든 없든 사진도 변경할 수 있도록 하기.
-      // 사진 존재하면 업데이트된 사진으로 변경하기.
       if (editedPhoto) {
-        if (photo) {
-          // 이전 사진 제거
-          const photoRef = ref(storage, `tweets/${user.uid}/${id}`);
-          await deleteObject(photoRef);
+        // 트위터 + 사진 변경
+        // 트위터 주소 참조
+        const locationRef = ref(storage, `tweets/${user.uid}/${id}`);
+
+        const uploadTask = uploadBytesResumable(locationRef, editedPhoto);
+        if (editedPhoto.size >= 1024 * 1024) {
+          // 사진크기가 1MB 이상이면 업로드를 진행하지 않고 예외 발생
+          // 업로드 취소
+          uploadTask.cancel();
+          throw new StorageError(StorageErrorCode.CANCELED, "file size is over 1MB");
         }
 
-        const photoRef = ref(storage, `tweets/${userId}/${id}`);
-        await updateObject
+        // 새로운 사진을 storage에 등록
+        const result = await uploadBytes(locationRef, editedPhoto);
+        const url = await getDownloadURL(result.ref);
+        await updateDoc(doc(db, "tweets", id), { tweet: editedTweet, photo: url });
+      } else {
+        // 트위터 내용만 수정
+        await updateDoc(doc(db, "tweets", id), { tweet: editedTweet });
       }
     } catch (e) {
       console.error(e);
@@ -169,14 +186,23 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
       setIsEditing(false);
     }
   };
+
+  const onClickSetImageButton = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { files } = e.target;
+    if (!user) return;
+    if (files && files.length === 1) {
+      setEditedPhoto(files[0]);
+    }
+  };
+
   const onDelete = async () => {
-    const ok = confirm('Are you sure you want to delete this tweet?');
+    const ok = confirm("Are you sure you want to delete this tweet?");
 
     // 승낙을 안하거나 || 트위터작성자가 아니면 삭제 취소.
     if (!ok || user?.uid !== userId) return;
     try {
       // tweet 삭제
-      await deleteDoc(doc(db, 'tweets', id));
+      await deleteDoc(doc(db, "tweets", id));
 
       // tweet삭제할때 같이 첨부한 이미지도 삭제
       if (photo) {
@@ -185,14 +211,6 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
       }
     } catch (e) {
       console.error(e);
-    }
-  };
-  const onClickSetImageButton = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { files } = e.target;
-    if (files && files.length === 1) {
-      setEditedPhoto(files[0]);
     }
   };
 
@@ -247,9 +265,7 @@ export default function Tweet({ userName, photo, tweet, userId, id }: ITweet) {
           ) : null}
           {
             // 삭제 버튼
-            user?.uid === userId ? (
-              <DeleteButton onClick={onDelete}>Delete</DeleteButton>
-            ) : null
+            user?.uid === userId ? <DeleteButton onClick={onDelete}>Delete</DeleteButton> : null
           }
         </EditorColumns>
       </Column>
